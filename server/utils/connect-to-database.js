@@ -1,22 +1,26 @@
 import mongoose from "mongoose";
 
+import { loggingWithTime } from "./logging-with-time.js";
+
 let isConnected = false;
 
 async function connectToDatabase() {
   try {
-    if (isConnected) {
-      console.log("Already connected to MongoDB");
-
+    if (mongoose.connection.readyState === 1) {
       return;
     }
 
-    const database = await mongoose.connect(process.env.MONGO_URI);
+    const database = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
 
-    isConnected = database.connections[0].readyState;
+    isConnected = mongoose.connection.readyState === 1;
 
-    console.log("Connected to MongoDB");
+    if (isConnected) {
+      loggingWithTime("Connected to MongoDB");
+    }
   } catch (error) {
-    console.error("Error connecting to MongoDB: ", error);
+    loggingWithTime("Failed to connect to MongoDB: " + error.message);
   }
 }
 

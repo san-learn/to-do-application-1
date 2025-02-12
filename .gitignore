@@ -1,3 +1,6 @@
 # Node.js dependencies
 /server/node_modules
 /client/node_modules
+
+# Environment variables
+/server/.env
