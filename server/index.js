@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import { authenticationRoutes } from "./routes/authentication-route.js";
 import { todosRoutes } from "./routes/todos-route.js";
@@ -13,6 +14,7 @@ const PORT = 3000;
 dotenv.config();
 
 application.use(express.json());
+application.use(cookieParser());
 
 application.use("/api/authentication", authenticationRoutes);
 application.use("/api/todos", todosRoutes);

@@ -80,9 +80,13 @@ async function signIn(request, response, next) {
     return next(createError(400, "Invalid credentials"));
   }
 
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
+  const token = jwt.sign(
+    { id: user._id, email: email },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
 
   loggingWithTime(
     "User [id: " +
@@ -102,7 +106,29 @@ async function signIn(request, response, next) {
 }
 
 async function signOut(request, response, next) {
-  response.send("sign-out");
+  const token = request.cookies.token;
+
+  if (!token) {
+    return next(createError(401, "Unauthorized"));
+  }
+
+  const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+
+  loggingWithTime(
+    "User [id: " +
+      decodedToken.id +
+      "] [email: " +
+      decodedToken.email +
+      "] signed out successfully"
+  );
+
+  response
+    .clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    })
+    .status(200)
+    .json({ message: "User signed out successfully" });
 }
 
 export { signUp, signIn, signOut };
