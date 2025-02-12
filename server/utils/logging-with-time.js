@@ -10,7 +10,7 @@ function loggingWithTime(message) {
     hour12: false,
   });
 
-  console.log(message + " | [time: " + now + "]\n");
+  console.log(message + " | [time: " + now + "]");
 }
 
 export { loggingWithTime };
