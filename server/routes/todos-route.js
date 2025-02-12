@@ -1,25 +1,22 @@
 import express from "express";
 
+import {
+  getAllTodos,
+  createTodo,
+  deleteTodo,
+  getTodo,
+  updateTodo,
+} from "../controllers/todos-controller";
+
 const todosRoutes = express.Router();
 
-todosRoutes.get("/", (request, response, next) => {
-  response.send("get-all-todos");
-});
+todosRoutes.get("/", getAllTodos);
+todosRoutes.get("/:todoId", getTodo);
 
-todosRoutes.post("/", (request, response, next) => {
-  response.send("create-todo");
-});
+todosRoutes.post("/", createTodo);
 
-todosRoutes.put("/:todoId", (request, response, next) => {
-  const { todoId } = request.params;
+todosRoutes.put("/:todoId", updateTodo);
 
-  response.send("update-todo " + todoId);
-});
-
-todosRoutes.delete("/:todoId", (request, response, next) => {
-  const { todoId } = request.params;
-
-  response.send("delete-todo " + todoId);
-});
+todosRoutes.delete("/:todoId", deleteTodo);
 
 export { todosRoutes };

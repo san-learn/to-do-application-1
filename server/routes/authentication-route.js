@@ -1,17 +1,15 @@
 import express from "express";
 
+import {
+  signUp,
+  signIn,
+  signOut,
+} from "../controllers/authentication-controller.js";
+
 const authenticationRoutes = express.Router();
 
-authenticationRoutes.post("/sign-up", (request, response, next) => {
-  response.send("sign-up");
-});
-
-authenticationRoutes.post("/sign-in", (request, response, next) => {
-  response.send("sign-in");
-});
-
-authenticationRoutes.post("/sign-out", (request, response, next) => {
-  response.send("sign-out");
-});
+authenticationRoutes.post("/sign-up", signUp);
+authenticationRoutes.post("/sign-in", signIn);
+authenticationRoutes.post("/sign-out", signOut);
 
 export { authenticationRoutes };
