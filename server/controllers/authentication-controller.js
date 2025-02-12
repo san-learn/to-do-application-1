@@ -106,20 +106,10 @@ async function signIn(request, response, next) {
 }
 
 async function signOut(request, response, next) {
-  const token = request.cookies.token;
-
-  if (!token) {
-    return next(createError(401, "Unauthorized"));
-  }
-
-  const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+  const { id, email } = request.user;
 
   loggingWithTime(
-    "User [id: " +
-      decodedToken.id +
-      "] [email: " +
-      decodedToken.email +
-      "] signed out successfully"
+    "User [id: " + id + "] [email: " + email + "] signed out successfully"
   );
 
   response

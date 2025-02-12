@@ -1,5 +1,7 @@
 import express from "express";
 
+import { verifyToken } from "../utils/verify-token.js";
+
 import {
   signUp,
   signIn,
@@ -10,6 +12,6 @@ const authenticationRoutes = express.Router();
 
 authenticationRoutes.post("/sign-up", signUp);
 authenticationRoutes.post("/sign-in", signIn);
-authenticationRoutes.post("/sign-out", signOut);
+authenticationRoutes.post("/sign-out", verifyToken, signOut);
 
 export { authenticationRoutes };
