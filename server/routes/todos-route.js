@@ -1,5 +1,7 @@
 import express from "express";
 
+import { verifyToken } from "../utils/verify-token.js";
+
 import {
   getAllTodos,
   createTodo,
@@ -10,13 +12,13 @@ import {
 
 const todosRoutes = express.Router();
 
-todosRoutes.get("/", getAllTodos);
-todosRoutes.get("/:todoId", getTodo);
+todosRoutes.get("/", verifyToken, getAllTodos);
+todosRoutes.get("/:todoId", verifyToken, getTodo);
 
-todosRoutes.post("/", createTodo);
+todosRoutes.post("/", verifyToken, createTodo);
 
-todosRoutes.put("/:todoId", updateTodo);
+todosRoutes.put("/:todoId", verifyToken, updateTodo);
 
-todosRoutes.delete("/:todoId", deleteTodo);
+todosRoutes.delete("/:todoId", verifyToken, deleteTodo);
 
 export { todosRoutes };

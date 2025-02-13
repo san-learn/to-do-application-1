@@ -3,122 +3,149 @@ import jwt from "jsonwebtoken";
 
 import { User } from "../models/user-model.js";
 
-import { connectToDatabase } from "../utils/connect-to-database.js";
 import { createError } from "../utils/create-error.js";
 import { loggingWithTime } from "../utils/logging-with-time.js";
 
 async function signUp(request, response, next) {
   const { email, password } = request.body;
 
-  if (!email || !password) {
-    return next(createError(400, "Email and password are required"));
-  }
+  try {
+    if (!email || !password) {
+      return next(createError(400, "Email and password are required"));
+    }
 
-  await connectToDatabase();
+    const userExists = await User.exists({ email: email });
 
-  const userExists = await User.exists({ email: email });
+    if (userExists) {
+      loggingWithTime(
+        "Someone tried to sign up [email: " +
+          email +
+          "] but failed because user already exists"
+      );
 
-  if (userExists) {
+      return next(createError(400, "User already exists"));
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({ email: email, password: hashedPassword });
+
     loggingWithTime(
-      "Someone tried to sign up [email: " +
-        email +
-        "] but failed because user already exists"
+      "User [id: " +
+        user._id +
+        "] [email: " +
+        user.email +
+        "] successfully signed up"
     );
 
-    return next(createError(400, "User already exists"));
+    response
+      .status(201)
+      .json({ message: "Successfully signed up", data: { user: user } });
+  } catch (error) {
+    loggingWithTime(
+      "Failed to sign up [email: " + email + "] [error: " + error.message + "]"
+    );
+
+    next(createError(500, "Something went wrong"));
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = await User.create({ email: email, password: hashedPassword });
-
-  loggingWithTime(
-    "User [id: " +
-      user._id +
-      "] [email: " +
-      user.email +
-      "] created successfully"
-  );
-
-  response
-    .status(201)
-    .json({ message: "User created successfully", data: { user: user } });
 }
 
 async function signIn(request, response, next) {
   const { email, password } = request.body;
 
-  if (!email || !password) {
-    return next(createError(400, "Email and password are required"));
-  }
+  try {
+    if (!email || !password) {
+      return next(createError(400, "Email and password are required"));
+    }
 
-  await connectToDatabase();
+    const user = await User.findOne({ email: email });
 
-  const user = await User.findOne({ email: email });
+    if (!user) {
+      loggingWithTime(
+        "Someone tried to sign in [email: " +
+          email +
+          "] but failed because user does not exist"
+      );
 
-  if (!user) {
-    loggingWithTime(
-      "Someone tried to sign in [email: " +
-        email +
-        "] but failed because user does not exist"
+      return next(createError(400, "Invalid credentials"));
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      loggingWithTime(
+        "Someone tried to sign in [id: " +
+          user._id +
+          "] [email: " +
+          user.email +
+          "] but failed because password is invalid"
+      );
+
+      return next(createError(400, "Invalid credentials"));
+    }
+
+    const token = jwt.sign(
+      { id: user._id, email: email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
     );
 
-    return next(createError(400, "Invalid credentials"));
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
     loggingWithTime(
-      "Someone tried to sign in [id: " +
+      "User [id: " +
         user._id +
         "] [email: " +
         user.email +
-        "] but failed because password is invalid"
+        "] successfully signed in"
     );
 
-    return next(createError(400, "Invalid credentials"));
+    response
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      })
+      .status(200)
+      .json({ message: "Successfully signed in", data: { token: token } });
+  } catch (error) {
+    loggingWithTime(
+      "Failed to sign in [email: " + email + "] [error: " + error.message + "]"
+    );
+
+    next(createError(500, "Something went wrong "));
   }
-
-  const token = jwt.sign(
-    { id: user._id, email: email },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "7d",
-    }
-  );
-
-  loggingWithTime(
-    "User [id: " +
-      user._id +
-      "] [email: " +
-      user.email +
-      "] signed in successfully"
-  );
-
-  response
-    .cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    })
-    .status(200)
-    .json({ message: "User signed in successfully", data: { token: token } });
 }
 
 async function signOut(request, response, next) {
-  const { id, email } = request.user;
+  const { user } = request;
 
-  loggingWithTime(
-    "User [id: " + id + "] [email: " + email + "] signed out successfully"
-  );
+  try {
+    loggingWithTime(
+      "User [id: " +
+        user.id +
+        "] [email: " +
+        user.email +
+        "] successfully signed out"
+    );
 
-  response
-    .clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    })
-    .status(200)
-    .json({ message: "User signed out successfully" });
+    response
+      .clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      })
+      .status(200)
+      .json({ message: "Successfully signed out" });
+  } catch (error) {
+    loggingWithTime(
+      "Failed to sign out [id: " +
+        user.id +
+        "] [email: " +
+        user.email +
+        "] [error: " +
+        error.message +
+        "]"
+    );
+
+    next(createError(500, "Something went wrong"));
+  }
 }
 
 export { signUp, signIn, signOut };
