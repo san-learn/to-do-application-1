@@ -38,9 +38,7 @@ async function signUp(request, response, next) {
         "] successfully signed up"
     );
 
-    response
-      .status(201)
-      .json({ message: "Successfully signed up", data: { user: user } });
+    response.status(201).json({ message: "Successfully signed up" });
   } catch (error) {
     loggingWithTime(
       "Failed to sign up [email: " + email + "] [error: " + error.message + "]"
