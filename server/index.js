@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 import { authenticationRoutes } from "./routes/authentication-route.js";
 import { todosRoutes } from "./routes/todos-route.js";
@@ -8,12 +9,18 @@ import { todosRoutes } from "./routes/todos-route.js";
 import { connectToDatabase } from "./utils/connect-to-database.js";
 import { loggingWithTime } from "./utils/logging-with-time.js";
 
+dotenv.config();
+
 const application = express();
 
 const PORT = 3000;
 
-dotenv.config();
+const corsOptions = {
+  origin: ["http://localhost:5173"],
+  credentials: true,
+};
 
+application.use(cors(corsOptions));
 application.use(express.json());
 application.use(cookieParser());
 
