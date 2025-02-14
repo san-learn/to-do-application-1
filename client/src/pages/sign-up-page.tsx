@@ -45,16 +45,18 @@ export function SignUpPage() {
       >
         {state.data.message && state.success && (
           <div className="bg-green-100 border border-green-400 text-green-700 p-4 rounded relative">
-            <span className="block sm:inline">{state.data.message}</span>
-            <span>
-              You will be redirected to the sign in page in a few seconds
+            <span className="block sm:inline">
+              {state.data.message}, you will be redirected to the sign in page
+              in a few seconds
             </span>
           </div>
         )}
 
         {state.data.message && !state.success && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-            <span className="block sm:inline">{state.data.message}</span>
+            <span className="block sm:inline">
+              {state.data.message}, please try again
+            </span>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 import "./index.css";
 
@@ -10,6 +11,8 @@ import { SignUpPage } from "./pages/sign-up-page";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <Toaster position="bottom-center" />
+
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
