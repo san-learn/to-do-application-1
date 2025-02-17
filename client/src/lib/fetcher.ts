@@ -8,10 +8,14 @@ export async function fetcher([APIEndpoint, options]: [string, RequestInit]) {
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     mode: "cors",
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    body: options.body ? options.body : undefined,
   });
 
   const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message);
+  }
 
   return data;
 }

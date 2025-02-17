@@ -38,9 +38,7 @@ export async function signUp(
     }
 
     return { success: true, data: data };
-  } catch (error) {
-    console.log(error);
-
+  } catch {
     return {
       success: false,
       data: { message: "Something went wrong" },
@@ -75,9 +73,7 @@ export async function signIn(
     }
 
     return { success: true, data: data };
-  } catch (error) {
-    console.log(error);
-
+  } catch {
     return {
       success: false,
       data: { message: "Something went wrong" },
