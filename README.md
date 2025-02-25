@@ -31,8 +31,7 @@ git clone https://github.com/san-learn/to-do-application-1.git
 2. Create a `.env` file in the root directory with the following keys:
 
    ```env
-   # Set to 'development' or 'production'
-   NODE_ENV=development
+   NODE_ENV=development # Set to 'development' or 'production'
 
    PORT=3000
 
@@ -71,6 +70,22 @@ git clone https://github.com/san-learn/to-do-application-1.git
    ```sh
    npm run dev
    ```
+
+## Screenshots
+
+Here are some screenshots of the project:
+
+### Sign Up Page
+
+![Sign Up Page](https://github.com/user-attachments/assets/f08e0dcb-9d56-4b14-87d0-ecf824e0778f)
+
+### Sign In Page
+
+![Sign In Page](https://github.com/user-attachments/assets/075ef5f6-6d0a-487e-8436-c8311c934b3d)
+
+### Home Page
+
+![Home Page](https://github.com/user-attachments/assets/b9f88798-ea65-4548-bdf6-e88500f710f5)
 
 ## Dependencies
 
@@ -134,18 +149,11 @@ The client-side application is built using React with TailwindCSS and SWR for da
 | `typescript-eslint`           | ESLint integration with TypeScript                  |
 | `vite`                        | Frontend build tool                                 |
 
-## Screenshots
+## Contact
 
-Here are some screenshots of the project:
+If you have any questions or feedback, feel free to reach out:
 
-### Sign Up Page
-
-![Sign Up Page](https://github.com/user-attachments/assets/f08e0dcb-9d56-4b14-87d0-ecf824e0778f)
-
-### Sign In Page
-
-![Sign In Page](https://github.com/user-attachments/assets/075ef5f6-6d0a-487e-8436-c8311c934b3d)
-
-### Home Page
-
-![Home Page](https://github.com/user-attachments/assets/b9f88798-ea65-4548-bdf6-e88500f710f5)
+- **Email**: [sanlearn3@gmail.com](mailto:sanlearn3@gmail.com)
+- **LinkedIn**: [Ikhsan Farizki](https://www.linkedin.com/in/ikhsan-farizki/)
+- **GitHub**: [san-learn](https://github.com/san-learn)
+- **Instagram**: [ikhsan.farizki](https://www.instagram.com/ikhsan.farizki/)
