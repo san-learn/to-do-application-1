@@ -6,6 +6,17 @@ import { User } from "../models/user-model.js";
 import { createError } from "../utils/create-error.js";
 import { loggingWithTime } from "../utils/logging-with-time.js";
 
+async function getUser(request, response) {
+  const { user } = request;
+
+  response
+    .status(200)
+    .json({
+      message: "Successfully got user",
+      data: { user: { email: user.email } },
+    });
+}
+
 async function signUp(request, response, next) {
   const { email, password } = request.body;
 
@@ -146,4 +157,4 @@ async function signOut(request, response, next) {
   }
 }
 
-export { signUp, signIn, signOut };
+export { signUp, signIn, signOut, getUser };
