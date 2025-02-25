@@ -133,3 +133,19 @@ The client-side application is built using React with TailwindCSS and SWR for da
 | `typescript`                  | JavaScript superset with static typing              |
 | `typescript-eslint`           | ESLint integration with TypeScript                  |
 | `vite`                        | Frontend build tool                                 |
+
+## Screenshots
+
+Here are some screenshots of the project:
+
+### Sign Up Page
+
+![Sign Up Page](https://github.com/user-attachments/assets/f08e0dcb-9d56-4b14-87d0-ecf824e0778f)
+
+### Sign In Page
+
+![Sign In Page](https://github.com/user-attachments/assets/075ef5f6-6d0a-487e-8436-c8311c934b3d)
+
+### Home Page
+
+![Home Page](https://github.com/user-attachments/assets/b9f88798-ea65-4548-bdf6-e88500f710f5)
