@@ -1,25 +1,32 @@
 import useSWR from "swr";
 import toast from "react-hot-toast";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import { CircleCheck, Plus, Trash } from "lucide-react";
+
+import { useGetUser } from "@/hooks/use-get-user";
 
 import { fetcher } from "@/lib/fetcher";
 import { TodoType } from "@/lib/types";
 import {
   createTodoErrors,
-  deleteUpdateTodoErrors,
+  deleteTodoErrors,
+  updateTodoErrors,
   signOutUserErrors,
 } from "@/lib/const";
 import { cn } from "@/lib/utils";
 
 import { EditTodo } from "@/components/edit-todo";
 import { SignOutButton } from "@/components/sign-out-button";
+import { Notification } from "@/components/notification";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export function HomePage() {
+  const isAuthenticated = useGetUser();
+
   const [formValues, setFormValues] = useState("");
 
   const navigate = useNavigate();
@@ -51,6 +58,148 @@ export function HomePage() {
         toast.error((error as Error).message);
       }
     }
+  }
+
+  async function handleClickDeleteTodo(todoId: string) {
+    const optimisticTodos = todos.data.todos.map((todo: TodoType) => {
+      return todo._id === todoId
+        ? { ...todo, title: todo.title + " is being deleted..." }
+        : todo;
+    });
+
+    async function deleteTodo() {
+      try {
+        await fetcher(["/api/todos/" + todoId, { method: "DELETE" }]);
+
+        toast.success("Todo deleted successfully");
+
+        return {
+          message: todos.message,
+          data: {
+            user: todos.data.user,
+            todos: todos.data.todos.filter((todo: TodoType) => {
+              return todo._id !== todoId;
+            }),
+          },
+        };
+      } catch (error) {
+        if (!deleteTodoErrors.includes((error as Error).message)) {
+          toast.error("Something went wrong");
+        } else {
+          toast.error((error as Error).message);
+        }
+      }
+    }
+
+    await mutate(deleteTodo, {
+      optimisticData: {
+        message: todos.message,
+        data: { user: todos.data.user, todos: optimisticTodos },
+      },
+      revalidate: true,
+      rollbackOnError: true,
+    });
+  }
+
+  async function handleClickCompleteTodo(todoId: string, isCompleted: boolean) {
+    const optimisticTodos = todos.data.todos.map((todo: TodoType) => {
+      return todo._id === todoId
+        ? { ...todo, isCompleted: !isCompleted }
+        : todo;
+    });
+
+    async function completeTodo() {
+      try {
+        await fetcher([
+          "/api/todos/" + todoId,
+          {
+            method: "PUT",
+            body: JSON.stringify({ isCompleted: !isCompleted }),
+          },
+        ]);
+
+        toast.success(
+          "Todo " +
+            (isCompleted ? "uncompleted" : "completed") +
+            " successfully"
+        );
+
+        return {
+          message: todos.message,
+          data: { user: todos.data.user, todos: optimisticTodos },
+        };
+      } catch (error) {
+        if (!updateTodoErrors.includes((error as Error).message)) {
+          toast.error("Something went wrong");
+        } else {
+          toast.error((error as Error).message);
+        }
+      }
+    }
+
+    await mutate(completeTodo, {
+      optimisticData: {
+        message: todos.message,
+        data: {
+          user: todos.data.user,
+          todos: optimisticTodos,
+        },
+      },
+      revalidate: true,
+      rollbackOnError: true,
+    });
+  }
+
+  async function handleSubmitUpdateTodo(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    const todoId = formData.get("todo-id")?.toString();
+    const title = formData.get("title")?.toString().trim();
+
+    if (!title) {
+      return toast.error("Title is required");
+    }
+
+    const optimisticTodo = todos.data.todos.map((todo: TodoType) => {
+      return todo._id === todoId
+        ? { ...todo, title: todo.title + " is being updated..." }
+        : todo;
+    });
+
+    async function updateTodo() {
+      try {
+        await fetcher([
+          "/api/todos/" + todoId,
+          { method: "PUT", body: JSON.stringify({ title: title }) },
+        ]);
+
+        toast.success("Todo updated successfully");
+
+        return {
+          message: todos.message,
+          data: { user: todos.data.user, todos: optimisticTodo },
+        };
+      } catch (error) {
+        if (!updateTodoErrors.includes((error as Error).message)) {
+          toast.error("Something went wrong");
+        } else {
+          toast.error((error as Error).message);
+        }
+      }
+    }
+
+    await mutate(updateTodo, {
+      optimisticData: {
+        message: todos.message,
+        data: { user: todos.data.user, todos: optimisticTodo },
+      },
+      revalidate: true,
+      rollbackOnError: true,
+    });
   }
 
   async function handleSubmitAddTodo(event: React.FormEvent<HTMLFormElement>) {
@@ -110,154 +259,25 @@ export function HomePage() {
     });
   }
 
-  async function handleClickDeleteTodo(todoId: string) {
-    const optimisticTodos = todos.data.todos.map((todo: TodoType) => {
-      return todo._id === todoId
-        ? { ...todo, title: todo.title + " is being deleted..." }
-        : todo;
-    });
-
-    async function deleteTodo() {
-      try {
-        await fetcher(["/api/todos/" + todoId, { method: "DELETE" }]);
-
-        toast.success("Todo deleted successfully");
-
-        return {
-          message: todos.message,
-          data: {
-            user: todos.data.user,
-            todos: todos.data.todos.filter((todo: TodoType) => {
-              return todo._id !== todoId;
-            }),
-          },
-        };
-      } catch (error) {
-        if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
-          toast.error("Something went wrong");
-        } else {
-          toast.error((error as Error).message);
-        }
-      }
-    }
-
-    await mutate(deleteTodo, {
-      optimisticData: {
-        message: todos.message,
-        data: { user: todos.data.user, todos: optimisticTodos },
-      },
-      revalidate: true,
-      rollbackOnError: true,
-    });
+  if (isAuthenticated === null) {
+    return null;
   }
 
-  async function handleClickCompleteTodo(todoId: string, isCompleted: boolean) {
-    const optimisticTodos = todos.data.todos.map((todo: TodoType) => {
-      return todo._id === todoId
-        ? { ...todo, isCompleted: !isCompleted }
-        : todo;
-    });
-
-    async function completeTodo() {
-      try {
-        await fetcher([
-          "/api/todos/" + todoId,
-          {
-            method: "PUT",
-            body: JSON.stringify({ isCompleted: !isCompleted }),
-          },
-        ]);
-
-        toast.success(
-          "Todo " +
-            (isCompleted ? "uncompleted" : "completed") +
-            " successfully"
-        );
-
-        return {
-          message: todos.message,
-          data: { user: todos.data.user, todos: optimisticTodos },
-        };
-      } catch (error) {
-        if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
-          toast.error("Something went wrong");
-        } else {
-          toast.error((error as Error).message);
-        }
-      }
-    }
-
-    await mutate(completeTodo, {
-      optimisticData: {
-        message: todos.message,
-        data: {
-          user: todos.data.user,
-          todos: optimisticTodos,
-        },
-      },
-      revalidate: true,
-      rollbackOnError: true,
-    });
-  }
-
-  async function handleSubmitUpdateTodo(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-
-    const todoId = formData.get("todo-id")?.toString();
-    const title = formData.get("title")?.toString().trim();
-
-    if (!title) {
-      return toast.error("Title is required");
-    }
-
-    const optimisticTodo = todos.data.todos.map((todo: TodoType) => {
-      return todo._id === todoId
-        ? { ...todo, title: todo.title + " is being updated..." }
-        : todo;
-    });
-
-    async function updateTodo() {
-      try {
-        await fetcher([
-          "/api/todos/" + todoId,
-          { method: "PUT", body: JSON.stringify({ title: title }) },
-        ]);
-
-        toast.success("Todo updated successfully");
-
-        return {
-          message: todos.message,
-          data: { user: todos.data.user, todos: optimisticTodo },
-        };
-      } catch (error) {
-        if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
-          toast.error("Something went wrong");
-        } else {
-          toast.error((error as Error).message);
-        }
-      }
-    }
-
-    await mutate(updateTodo, {
-      optimisticData: {
-        message: todos.message,
-        data: { user: todos.data.user, todos: optimisticTodo },
-      },
-      revalidate: true,
-      rollbackOnError: true,
-    });
+  if (!isAuthenticated) {
+    return <Navigate to="/sign-in" />;
   }
 
   if (error) {
-    return <div>Failed to load {error.message}</div>;
+    return (
+      <Notification
+        isError={true}
+        message={"Failed to load: " + error.message}
+      />
+    );
   }
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Notification message="Loading..." />;
   }
 
   return (

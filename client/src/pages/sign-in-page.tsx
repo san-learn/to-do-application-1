@@ -1,13 +1,17 @@
 import { useActionState, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { signIn } from "@/actions/user-action";
+
+import { useGetUser } from "@/hooks/use-get-user";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function SignInPage() {
+  const isAuthenticated = useGetUser();
+
   const [formValues, setFormValues] = useState({
     email: "",
     password: "",
@@ -35,6 +39,14 @@ export function SignInPage() {
       ...formValues,
       [event.target.name]: event.target.value,
     });
+  }
+
+  if (isAuthenticated === null) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/" />;
   }
 
   return (

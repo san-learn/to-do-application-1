@@ -16,15 +16,14 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
-export function EditTodo({
-  todo,
-  handleSubmitUpdateTodo,
-}: {
+type EditTodoProps = {
   todo: TodoType;
   handleSubmitUpdateTodo: (
     event: React.FormEvent<HTMLFormElement>
   ) => Promise<string | undefined>;
-}) {
+};
+
+export function EditTodo({ todo, handleSubmitUpdateTodo }: EditTodoProps) {
   const [title, setTitle] = useState(todo.title);
 
   function handleChangesetTitle(event: React.ChangeEvent<HTMLInputElement>) {

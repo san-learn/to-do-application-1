@@ -9,12 +9,10 @@ import { loggingWithTime } from "../utils/logging-with-time.js";
 async function getUser(request, response) {
   const { user } = request;
 
-  response
-    .status(200)
-    .json({
-      message: "Successfully got user",
-      data: { user: { email: user.email } },
-    });
+  response.status(200).json({
+    message: "Successfully got user",
+    data: { user: { email: user.email } },
+  });
 }
 
 async function signUp(request, response, next) {
