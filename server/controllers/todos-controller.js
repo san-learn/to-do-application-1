@@ -23,7 +23,10 @@ async function getAllTodos(request, response, next) {
 
     response
       .status(200)
-      .json({ message: "Successfully got all todos", data: { todos: todos } });
+      .json({
+        message: "Successfully got all todos",
+        data: { user: { email: user.email }, todos: todos },
+      });
   } catch (error) {
     loggingWithTime(
       "Failed to get all todos [userId: " +

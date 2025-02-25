@@ -1,20 +1,28 @@
 import useSWR from "swr";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { CircleCheck, Plus, Trash } from "lucide-react";
 
 import { fetcher } from "@/lib/fetcher";
 import { TodoType } from "@/lib/types";
-import { createTodoErrors, deleteUpdateTodoErrors } from "@/lib/const";
+import {
+  createTodoErrors,
+  deleteUpdateTodoErrors,
+  signOutUserErrors,
+} from "@/lib/const";
 import { cn } from "@/lib/utils";
 
 import { EditTodo } from "@/components/edit-todo";
+import { SignOutButton } from "@/components/sign-out-button";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export function HomePage() {
   const [formValues, setFormValues] = useState("");
+
+  const navigate = useNavigate();
 
   const {
     data: todos,
@@ -27,6 +35,22 @@ export function HomePage() {
     event: React.ChangeEvent<HTMLInputElement>
   ) {
     setFormValues(event.target.value);
+  }
+
+  async function handleClickSignOut() {
+    try {
+      await fetcher(["/api/authentication/sign-out", { method: "POST" }]);
+
+      toast.success("Sign out successfully");
+
+      navigate("/sign-in");
+    } catch (error) {
+      if (!signOutUserErrors.includes((error as Error).message)) {
+        toast.error("Something went wrong");
+      } else {
+        toast.error((error as Error).message);
+      }
+    }
   }
 
   async function handleSubmitAddTodo(event: React.FormEvent<HTMLFormElement>) {
@@ -50,12 +74,7 @@ export function HomePage() {
       try {
         const data = await fetcher([
           "/api/todos/",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              title: title,
-            }),
-          },
+          { method: "POST", body: JSON.stringify({ title: title }) },
         ]);
 
         setFormValues("");
@@ -65,6 +84,7 @@ export function HomePage() {
         return {
           message: todos.message,
           data: {
+            user: todos.data.user,
             todos: [...todos.data.todos, data.data.todo],
           },
         };
@@ -81,6 +101,7 @@ export function HomePage() {
       optimisticData: {
         message: todos.message,
         data: {
+          user: todos.data.user,
           todos: [...todos.data.todos, optimisticTodo],
         },
       },
@@ -105,6 +126,7 @@ export function HomePage() {
         return {
           message: todos.message,
           data: {
+            user: todos.data.user,
             todos: todos.data.todos.filter((todo: TodoType) => {
               return todo._id !== todoId;
             }),
@@ -122,9 +144,7 @@ export function HomePage() {
     await mutate(deleteTodo, {
       optimisticData: {
         message: todos.message,
-        data: {
-          todos: optimisticTodos,
-        },
+        data: { user: todos.data.user, todos: optimisticTodos },
       },
       revalidate: true,
       rollbackOnError: true,
@@ -144,9 +164,7 @@ export function HomePage() {
           "/api/todos/" + todoId,
           {
             method: "PUT",
-            body: JSON.stringify({
-              isCompleted: !isCompleted,
-            }),
+            body: JSON.stringify({ isCompleted: !isCompleted }),
           },
         ]);
 
@@ -158,9 +176,7 @@ export function HomePage() {
 
         return {
           message: todos.message,
-          data: {
-            todos: optimisticTodos,
-          },
+          data: { user: todos.data.user, todos: optimisticTodos },
         };
       } catch (error) {
         if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
@@ -175,6 +191,7 @@ export function HomePage() {
       optimisticData: {
         message: todos.message,
         data: {
+          user: todos.data.user,
           todos: optimisticTodos,
         },
       },
@@ -207,21 +224,14 @@ export function HomePage() {
       try {
         await fetcher([
           "/api/todos/" + todoId,
-          {
-            method: "PUT",
-            body: JSON.stringify({
-              title: title,
-            }),
-          },
+          { method: "PUT", body: JSON.stringify({ title: title }) },
         ]);
 
         toast.success("Todo updated successfully");
 
         return {
           message: todos.message,
-          data: {
-            todos: optimisticTodo,
-          },
+          data: { user: todos.data.user, todos: optimisticTodo },
         };
       } catch (error) {
         if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
@@ -235,9 +245,7 @@ export function HomePage() {
     await mutate(updateTodo, {
       optimisticData: {
         message: todos.message,
-        data: {
-          todos: optimisticTodo,
-        },
+        data: { user: todos.data.user, todos: optimisticTodo },
       },
       revalidate: true,
       rollbackOnError: true,
@@ -254,10 +262,15 @@ export function HomePage() {
 
   return (
     <div className="flex items-center justify-center h-screen p-4">
-      <div className="max-w-lg w-full flex flex-col gap-6 border rounded-md shadow-md p-8">
-        {/* <div>
-          <p>Hello {user.data.user.name}</p>
-        </div> */}
+      <div className="max-w-lg w-full flex flex-col gap-8 border rounded-md shadow-md p-8">
+        <div className="flex items-center justify-between border-b pb-4">
+          <p className="text-sm">
+            Signed in as{" "}
+            <span className="font-semibold">{todos.data.user.email}</span>
+          </p>
+
+          <SignOutButton handleClickSignOut={handleClickSignOut} />
+        </div>
 
         <h1 className="text-4xl font-bold text-center text-primary">
           To Do Application
