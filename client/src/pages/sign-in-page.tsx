@@ -45,11 +45,9 @@ export function SignInPage() {
     return null;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" />;
-  }
-
-  return (
+  return isAuthenticated ? (
+    <Navigate to="/" />
+  ) : (
     <div className="h-screen flex justify-center items-center p-4">
       <form
         action={formAction}
