@@ -2,13 +2,14 @@ import useSWR from "swr";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
-import { CircleCheck, CircleUserRound, Edit, Plus, Trash } from "lucide-react";
+import { CircleCheck, Plus, Trash } from "lucide-react";
 
 import { fetcher } from "@/lib/fetcher";
 import { TodoType } from "@/lib/types";
 import { createTodoErrors, deleteUpdateTodoErrors } from "@/lib/const";
 import { cn } from "@/lib/utils";
 
+import { EditTodo } from "@/components/edit-todo";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -49,7 +50,12 @@ export function HomePage() {
       try {
         const data = await fetcher([
           "/api/todos/",
-          { method: "POST", body: JSON.stringify({ title: title }) },
+          {
+            method: "POST",
+            body: JSON.stringify({
+              title: title,
+            }),
+          },
         ]);
 
         setFormValues("");
@@ -144,7 +150,11 @@ export function HomePage() {
           },
         ]);
 
-        toast.success("Todo completed successfully");
+        toast.success(
+          "Todo " +
+            (isCompleted ? "uncompleted" : "completed") +
+            " successfully"
+        );
 
         return {
           message: todos.message,
@@ -173,6 +183,67 @@ export function HomePage() {
     });
   }
 
+  async function handleSubmitUpdateTodo(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
+    const todoId = formData.get("todo-id")?.toString();
+    const title = formData.get("title")?.toString().trim();
+
+    if (!title) {
+      return toast.error("Title is required");
+    }
+
+    const optimisticTodo = todos.data.todos.map((todo: TodoType) => {
+      return todo._id === todoId
+        ? { ...todo, title: todo.title + " is being updated..." }
+        : todo;
+    });
+
+    async function updateTodo() {
+      try {
+        await fetcher([
+          "/api/todos/" + todoId,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              title: title,
+            }),
+          },
+        ]);
+
+        toast.success("Todo updated successfully");
+
+        return {
+          message: todos.message,
+          data: {
+            todos: optimisticTodo,
+          },
+        };
+      } catch (error) {
+        if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
+          toast.error("Something went wrong");
+        } else {
+          toast.error((error as Error).message);
+        }
+      }
+    }
+
+    await mutate(updateTodo, {
+      optimisticData: {
+        message: todos.message,
+        data: {
+          todos: optimisticTodo,
+        },
+      },
+      revalidate: true,
+      rollbackOnError: true,
+    });
+  }
+
   if (error) {
     return <div>Failed to load {error.message}</div>;
   }
@@ -184,7 +255,9 @@ export function HomePage() {
   return (
     <div className="flex items-center justify-center h-screen p-4">
       <div className="max-w-lg w-full flex flex-col gap-6 border rounded-md shadow-md p-8">
-        <CircleUserRound />
+        {/* <div>
+          <p>Hello {user.data.user.name}</p>
+        </div> */}
 
         <h1 className="text-4xl font-bold text-center text-primary">
           To Do Application
@@ -239,7 +312,10 @@ export function HomePage() {
                         }}
                         className="h-4 w-4 fill-transparent hover:fill-red-500 transition-colors"
                       />
-                      <Edit className="h-4 w-4 fill-transparent hover:fill-blue-500 transition-colors" />
+                      <EditTodo
+                        todo={todo}
+                        handleSubmitUpdateTodo={handleSubmitUpdateTodo}
+                      />
                     </div>
                   </div>
                 );
