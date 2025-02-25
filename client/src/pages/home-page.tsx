@@ -6,7 +6,7 @@ import { CircleCheck, CircleUserRound, Edit, Plus, Trash } from "lucide-react";
 
 import { fetcher } from "@/lib/fetcher";
 import { TodoType } from "@/lib/types";
-import { createTodoErrors } from "@/lib/const";
+import { createTodoErrors, deleteTodoErrors } from "@/lib/const";
 import { cn } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,8 @@ export function HomePage() {
 
         setFormValues("");
 
+        toast.success("Todo added successfully");
+
         return {
           message: todos.message,
           data: {
@@ -74,6 +76,50 @@ export function HomePage() {
         message: todos.message,
         data: {
           todos: [...todos.data.todos, optimisticTodo],
+        },
+      },
+      revalidate: true,
+      rollbackOnError: true,
+    });
+  }
+
+  async function handleClickDeleteTodo(todoId: string) {
+    const optimisticTodos = todos.data.todos.map((todo: TodoType) => {
+      return todo._id === todoId
+        ? { ...todo, title: todo.title + " is being deleted..." }
+        : todo;
+    });
+
+    async function deleteTodo() {
+      try {
+        await fetcher(["/api/todos/" + todoId, { method: "DELETE" }]);
+
+        toast.success("Todo deleted successfully");
+
+        return {
+          message: todos.message,
+          data: {
+            todos: todos.data.todos.filter((todo: TodoType) => {
+              return todo._id !== todoId;
+            }),
+          },
+        };
+      } catch (error) {
+        return console.log((error as Error).message);
+
+        if (!deleteTodoErrors.includes((error as Error).message)) {
+          toast.error("Something went wrong");
+        } else {
+          toast.error((error as Error).message);
+        }
+      }
+    }
+
+    await mutate(deleteTodo, {
+      optimisticData: {
+        message: todos.message,
+        data: {
+          todos: optimisticTodos,
         },
       },
       revalidate: true,
@@ -135,7 +181,10 @@ export function HomePage() {
 
                   <div className="px-4 flex gap-2">
                     <CircleCheck className="h-4 w-4 fill-transparent hover:fill-green-500 transition-colors" />
-                    <Trash className="h-4 w-4 fill-transparent hover:fill-red-500 transition-colors" />
+                    <Trash
+                      onClick={() => handleClickDeleteTodo(todo._id)}
+                      className="h-4 w-4 fill-transparent hover:fill-red-500 transition-colors"
+                    />
                     <Edit className="h-4 w-4 fill-transparent hover:fill-blue-500 transition-colors" />
                   </div>
                 </div>

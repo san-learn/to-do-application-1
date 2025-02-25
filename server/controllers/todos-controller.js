@@ -305,7 +305,7 @@ async function deleteTodo(request, response, next) {
       return next(createError(403, "Todo does not exist"));
     }
 
-    await todo.remove();
+    await Todo.findByIdAndDelete(todoId);
 
     loggingWithTime(
       "User [id: " +
