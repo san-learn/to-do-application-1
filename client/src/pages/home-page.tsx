@@ -6,7 +6,7 @@ import { CircleCheck, CircleUserRound, Edit, Plus, Trash } from "lucide-react";
 
 import { fetcher } from "@/lib/fetcher";
 import { TodoType } from "@/lib/types";
-import { createTodoErrors, deleteTodoErrors } from "@/lib/const";
+import { createTodoErrors, deleteUpdateTodoErrors } from "@/lib/const";
 import { cn } from "@/lib/utils";
 
 import { Input } from "@/components/ui/input";
@@ -105,9 +105,7 @@ export function HomePage() {
           },
         };
       } catch (error) {
-        return console.log((error as Error).message);
-
-        if (!deleteTodoErrors.includes((error as Error).message)) {
+        if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
           toast.error("Something went wrong");
         } else {
           toast.error((error as Error).message);
@@ -116,6 +114,54 @@ export function HomePage() {
     }
 
     await mutate(deleteTodo, {
+      optimisticData: {
+        message: todos.message,
+        data: {
+          todos: optimisticTodos,
+        },
+      },
+      revalidate: true,
+      rollbackOnError: true,
+    });
+  }
+
+  async function handleClickCompleteTodo(todoId: string, isCompleted: boolean) {
+    const optimisticTodos = todos.data.todos.map((todo: TodoType) => {
+      return todo._id === todoId
+        ? { ...todo, isCompleted: !isCompleted }
+        : todo;
+    });
+
+    async function completeTodo() {
+      try {
+        await fetcher([
+          "/api/todos/" + todoId,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              isCompleted: !isCompleted,
+            }),
+          },
+        ]);
+
+        toast.success("Todo completed successfully");
+
+        return {
+          message: todos.message,
+          data: {
+            todos: optimisticTodos,
+          },
+        };
+      } catch (error) {
+        if (!deleteUpdateTodoErrors.includes((error as Error).message)) {
+          toast.error("Something went wrong");
+        } else {
+          toast.error((error as Error).message);
+        }
+      }
+    }
+
+    await mutate(completeTodo, {
       optimisticData: {
         message: todos.message,
         data: {
@@ -164,31 +210,40 @@ export function HomePage() {
         <div className="border border-input bg-transparent flex flex-col rounded-md">
           {todos.data.todos.length ? (
             <>
-              {todos.data.todos.map((todo: TodoType, index: number) => (
-                <div
-                  key={todo._id}
-                  className={cn("flex h-10 items-center w-full", {
-                    "border-b": index !== todos.data.todos.length - 1,
-                  })}
-                >
-                  <span
-                    className={cn("flex-1 px-4", {
-                      "line-through": todo.isCompleted,
+              {todos.data.todos.map((todo: TodoType, index: number) => {
+                return (
+                  <div
+                    key={todo._id}
+                    className={cn("flex h-10 items-center w-full", {
+                      "border-b": index !== todos.data.todos.length - 1,
                     })}
                   >
-                    {todo.title}
-                  </span>
+                    <span
+                      className={cn("flex-1 px-4", {
+                        "line-through": todo.isCompleted,
+                      })}
+                    >
+                      {todo.title}
+                    </span>
 
-                  <div className="px-4 flex gap-2">
-                    <CircleCheck className="h-4 w-4 fill-transparent hover:fill-green-500 transition-colors" />
-                    <Trash
-                      onClick={() => handleClickDeleteTodo(todo._id)}
-                      className="h-4 w-4 fill-transparent hover:fill-red-500 transition-colors"
-                    />
-                    <Edit className="h-4 w-4 fill-transparent hover:fill-blue-500 transition-colors" />
+                    <div className="px-4 flex gap-2">
+                      <CircleCheck
+                        onClick={() => {
+                          handleClickCompleteTodo(todo._id, todo.isCompleted);
+                        }}
+                        className="h-4 w-4 fill-transparent hover:fill-green-500 transition-colors"
+                      />
+                      <Trash
+                        onClick={() => {
+                          handleClickDeleteTodo(todo._id);
+                        }}
+                        className="h-4 w-4 fill-transparent hover:fill-red-500 transition-colors"
+                      />
+                      <Edit className="h-4 w-4 fill-transparent hover:fill-blue-500 transition-colors" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </>
           ) : (
             <div className="flex h-10 items-center w-full">
